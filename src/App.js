@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState,useEffect, useCallback } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
+import AddMovie from "./components/AddMovie";
 
 function App() {
   const [movies, setMovies] = useState([]); // intially we passed an empty array
@@ -42,12 +43,18 @@ function App() {
   //     // });/* (1) */
   // }
 
-  async function fetchMoviesHandler() {
+  // useEffect(()=>{ /* 14 */
+  //     fetchMoviesHandler(); /* 11 */
+  // }, [fetchMoviesHandler]); /* 12 */
+
+  // async function fetchMoviesHandler() { /* 12 */
+  const fetchMoviesHandler = useCallback(async ()=> { /* 13 */
     setIsLoading(true); /* 8 */
     setError(null); /* 10 */
 
     try{
-      const response = await fetch('https://swapi.dev/api/films')
+      // const response = await fetch('https://swapi.dev/api/films') /* 15 */
+      const response = await fetch('https://react-http-70cf8-default-rtdb.firebaseio.com/movies.json') /* 15 */
 
       if(!response.ok){
         throw new Error('Something went wrong!'); // throwing error if ok returns false
@@ -71,8 +78,15 @@ function App() {
       setError(error.message); // inside this error varaible message will come the reponse.ok returns false in that condition if block will throw an error
     }
     setIsLoading(false);// we kept this here, so that isLoading stops showing no matter whether we got succeed or got error
-  }
+  }, []);
 
+  useEffect(()=>{
+    fetchMoviesHandler(); /* 11 */
+}, [fetchMoviesHandler]); /* 12 */
+
+function addMovieHandler(movie){
+  console.log(movie);
+}
   // these are the settings for the content variable written inside sections in return that content replaced the below code written in double dotted lines
 
     let content = <p> Found no movie. </p>
@@ -98,6 +112,9 @@ function App() {
   */
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie = { addMovieHandler }></AddMovie>
+      </section>
       <section>
         <button onClick = { fetchMoviesHandler }> Fetch Movies </button>
       </section>
@@ -157,5 +174,25 @@ don't show the isLoading*/
 /*(10) while sendign HTTP request we might get some error in our console so to show the users that there something went wrong we wanna or using useState() and handling it. Now when we are working with .then() wali method , then for
 catching error we might add .catch() block also after then block as per our need but when we work with async await instead of .catch() block we use try() catch block */
 
-/** FTP fetch() doesn't throw and error by itself if any problem occur or error occurs but the axios library does that thing therefore we are by our own checking that whether is there any error occurred while fetching the request that we are
+/* FTP fetch() doesn't throw and error by itself if any problem occur or error occurs but the axios library does that thing therefore we are by our own checking that whether is there any error occurred while fetching the request that we are
   doing thorugh response.ok field. This field shows ok if there are no error but says false if we find any error. */
+
+/* currently we are fetching data when the fetch movies button is clicked but generally in all the application the data is fetched when the page is reloaded or freshly opened but currently we are not doing this therefore we need to use useEffect()
+ because sending this HTTP request is a side effect which ultimately changes our component state and we learnt that such sideEffect should go in useEffect. 
+ Having HTTP get request and all in a fucntion is also fine as long as we don't call that function as main component function*/
+
+ /* We can defnie useEffect either in the component function or outside the component fucntion. */
+
+ /* this function will run whenver this function is re-evaluates. So, if we want that whenever this fucntion re-evaluates the useEffect() should run in that case we will put all the req dependencies inside useEffect() array */
+
+ /*(12) Adding the function itself as the dependency because we want that whenever any change is made to the function we want that the movie should be fetched again but this will create an infinite loop therfore to avoid this problem we will use 
+ useCallback() function */
+
+ /*(13) Making the functon inside the parenthesis async here because we are using async and await */
+
+ /*(14) moving this below because this is not initialized right now and being initialized below so we should use this after useCallback function */
+
+ /*(15) we commented this because SWAPI was not allowing to send a post request therefore for that purpose we are using firebase and pasting its link in place of SWAPI */
+
+ /*(16) movies.json will create a new node in that database basically. It is a dynammic REST API that you can configure here by using different segments to store data in diff nodes of your database and .json is something firebase specific, they need this .json
+ at the end of the URL you are sending requests to, otherwise your request will fail*/
