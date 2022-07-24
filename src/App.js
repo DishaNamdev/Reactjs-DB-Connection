@@ -61,18 +61,33 @@ function App() {
       }
 
       // for removing the second then() using await again
-      const data = await response.json();
+      const data = await response.json(); /* 18 */
 
-      const transformedMovies = data.results.map((movieData) => {
+      const loadedMovies = [];
+
+      for(const key in data){
+        // console.log("the key is ",key); this key is the random key given by the firebase to every of our data.
+        loadedMovies.push({ // creating an array of object that we got from the database
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+/*********************** this is used when we are fetching data from the data base in which we are not posting anything and everything is already kept in form of an API**** */
+     /* const transformedMovies = data.results.map((movieData) => {
         return{
           id: movieData.episode_id,
           title: movieData.title,
           openingText: movieData.opening_crawl,
           releaseDate: movieData.release_date,
         };
-      });
-      setMovies(transformedMovies);
-    
+      });  */
+/***************************************************************************************************************************************************************************************************** */    
+
+  // setMovies(transformedMovies); // this is used when we are fetching movies from SWAPI's API
+  setMovies(loadedMovies);
+
     }catch(error){
       // here we will be catching every error that we come across
       setError(error.message); // inside this error varaible message will come the reponse.ok returns false in that condition if block will throw an error
@@ -84,8 +99,16 @@ function App() {
     fetchMoviesHandler(); /* 11 */
 }, [fetchMoviesHandler]); /* 12 */
 
-function addMovieHandler(movie){
-  console.log(movie);
+async function addMovieHandler(movie){/*17 */
+  const response = await fetch('https://react-http-70cf8-default-rtdb.firebaseio.com/movies.json',{
+    method: 'POST',
+    body: JSON.stringify(movie),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  });
+  const data = await response.json(); // await is kept here bcz firebase also sends the responde / data back to us in json format
+  console.log(data);
 }
   // these are the settings for the content variable written inside sections in return that content replaced the below code written in double dotted lines
 
@@ -196,3 +219,19 @@ catching error we might add .catch() block also after then block as per our need
 
  /*(16) movies.json will create a new node in that database basically. It is a dynammic REST API that you can configure here by using different segments to store data in diff nodes of your database and .json is something firebase specific, they need this .json
  at the end of the URL you are sending requests to, otherwise your request will fail*/
+
+ /* (17) Inside addMovieHandler we are getting a movie object inside which we are getting an id field in which id will be added by firebase. Inside this function we are using fetch() method which is used to send the request to the database.
+ NOTE: fetch is not only used for fetching the data but also used for sending the post request
+fetch() by default sends a get request therefore we need to pass method field in which we will pass POST request.
+When we send a POST request to our firebase then firebase will go ahead and will create a resource in the database.*/
+
+/*Now what happens exactly when sending a POST request to some URL alwyas depends on the backend you're using. It is not always valid that sending a POST request will always create a resource even though its typically will
+but it alwys depends on the concrete but here for firebase sending a POST request will create a  resource. So, we also need to add that resource which should be stored and we do that with the body option here on this fetch() 
+API configuration object. So, here we will create a body field and pass on movie but body doesn't want a Javascript object like this instead it wants json data because json is its data format which is typically used for exchanging data between front-end and backend;
+ */ 
+
+/* firebase do not require this header field it can manage the data even without header field but there are lot of REST APIs which might require the extra header field to describe the content that will be sent and therefore setting this is not a bad idea.
+Using async and await here also */
+
+/*(18) the data that we are getting back when POST is used is not in the form of array now it is in the form of object that's why we need to make our own array loadedMovie and put all those objects inside that array with some properties like id, title, openingText and
+releaseDate */
